@@ -30,7 +30,7 @@ public class Configuration {
 				switch (scenario.getName()) {
 				case "battery-low":
 					if (condition.isPassed(rov.getBattery() + "")) {
-						rov.setStatus(Status.immobile.name());
+						rov.setStatus(Status.valueOf(scenario.getRover().get(0).getIs()).name());
 					}
 					break;
 				case "encountering-storm":
@@ -41,7 +41,6 @@ public class Configuration {
 						sample.setQuantity(Integer.valueOf(map.get("qty")));
 						sample.setPriority(1);
 						rov.useShield(sample);
-						throw new StormException();
 					}
 					break;
 
@@ -52,7 +51,7 @@ public class Configuration {
 						sample.setType(map.get("type"));
 						sample.setQuantity(Integer.valueOf(map.get("qty")));
 						sample.setPriority(2);
-						rov.collectSample(sample);
+						rov.collectSample(sample, this);
 					}
 					break;
 				case "encountering-rock":
@@ -62,51 +61,20 @@ public class Configuration {
 						sample.setType(map.get("type"));
 						sample.setQuantity(Integer.valueOf(map.get("qty")));
 						sample.setPriority(3);
-						rov.collectSample(sample);
+						rov.collectSample(sample, this);
 					}
 					break;
-
 				}
 			}
 		}
 		return true;
 	}
 
-	public boolean equate(String operater, String val1, String val2) {
-
-		switch (operater) {
-		case "eq":
-			if (val1.equals(val2)) {
-				return true;
+	public boolean isOperationAllowed(String operation, String status) {
+		for (State state : states) {
+			if (state.getName().equals(status)) {
+				return state.getAllowedActions().contains(operation);
 			}
-			break;
-		case "ne":
-			if (!val1.equals(val2)) {
-				return true;
-			}
-			break;
-
-		case "lte":
-			if (Integer.parseInt(val1) <= Integer.parseInt(val2)) {
-				return true;
-			}
-			break;
-		case "gte":
-			if (Integer.parseInt(val1) >= Integer.parseInt(val2)) {
-				return true;
-			}
-			break;
-		case "lt":
-			if (Integer.parseInt(val1) < Integer.parseInt(val2)) {
-				return true;
-			}
-			break;
-
-		case "gt":
-			if (Integer.parseInt(val1) > Integer.parseInt(val2)) {
-				return true;
-			}
-			break;
 		}
 		return false;
 	}

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.TreeSet;
 
 import com.ajirayaan.exception.RoverOutOfBoundsException;
+import com.ajirayaan.exception.StormException;
 import com.ajirayaan.utils.Directions;
 import com.ajirayaan.utils.Status;
 
@@ -52,14 +53,13 @@ public class Rover {
 		this.location = location;
 	}
 
-	public void move(Direction direction, Environment environment) {
-
-		if (Status.destroyed.name().equals(status)) {
-			throw new RuntimeException();
-		}
-		if (environment.isSolar_flare() && Status.immobile.name().equals(status)) {
+	public void move(Direction direction, Environment environment, Configuration configuration) {
+		if (Status.immobile.name().equals(status) && environment.isSolar_flare()) {
 			setBattery(10);
 			status = Status.normal.name();
+		}
+		if (!configuration.isOperationAllowed("move", status)) {
+			throw new RuntimeException();
 		}
 		int row = location.getRow();
 		int col = location.getColumn();
@@ -105,7 +105,10 @@ public class Rover {
 		environment.setTerrain(location);
 	}
 
-	public void collectSample(Sample sample) {
+	public void collectSample(Sample sample, Configuration configuration) {
+		if (!configuration.isOperationAllowed("collect-sample", status)) {
+			throw new RuntimeException();
+		}
 		if (inventory.isEmpty()) {
 			inventory.add(sample);
 			used_space = sample.getQuantity();
@@ -156,21 +159,26 @@ public class Rover {
 	}
 
 	public void useShield(Sample shield) {
+		if (Status.destroyed.name().equals(status)) {
+			throw new RuntimeException("Rover destroed...");
+		}
 		if (!Status.shielded.name().equals(status)) {
 			try {
 				if (inventory.isEmpty() || !inventory.contains(shield)) {
 					status = Status.destroyed.name();
 				}
 				if (inventory.contains(shield)) {
-					for (int j = 1; j <= shield.getQuantity(); j++) {
-						shield = inventory.first();
-						decrementSampleQuantity(shield);
-						status = Status.shielded.name();
-					}
+					shield = inventory.first();
+					decrementSampleQuantity(shield);
+					status = Status.shielded.name();
+				} else {
+					status = Status.destroyed.name();
 				}
 			} catch (Exception e) {
 				status = Status.destroyed.name();
 			}
+		} else {
+			throw new StormException();
 		}
 	}
 

@@ -38,6 +38,8 @@ public class Ajiryaan {
 		if (update.isStorm() != null) {
 			if (update.isStorm()) {
 				rover.useShield();
+			}else {
+				rover.unShield();
 			}
 			environment.setStorm(update.isStorm());
 		}
@@ -61,7 +63,7 @@ public class Ajiryaan {
 
 	public void moveRover(Direction direction) {
 		configuration.chekConditions(rover, environment);
-		rover.move(direction, environment);
+		rover.move(direction, environment,configuration);
 	}
 
 	public Ajiryaan() {
